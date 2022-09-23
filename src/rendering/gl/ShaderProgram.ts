@@ -33,6 +33,12 @@ class ShaderProgram {
 
   unifTime: WebGLUniformLocation;
 
+  unifBias: WebGLUniformLocation;
+  unifGain: WebGLUniformLocation;
+  unifFrequency: WebGLUniformLocation;
+  unifOctaves: WebGLUniformLocation;
+
+
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
 
@@ -53,6 +59,10 @@ class ShaderProgram {
     this.unifColor      = gl.getUniformLocation(this.prog, "u_Color");
 
     this.unifTime = gl.getUniformLocation(this.prog, "u_Time");
+    this.unifBias = gl.getUniformLocation(this.prog, "u_Bias");
+    this.unifGain = gl.getUniformLocation(this.prog, "u_Gain");
+    this.unifFrequency = gl.getUniformLocation(this.prog, "u_Freq");
+    this.unifOctaves = gl.getUniformLocation(this.prog, "u_Octaves");
   }
 
   use() {
@@ -114,6 +124,34 @@ class ShaderProgram {
     this.use();
     if (this.unifTime !== -1) {
       gl.uniform1f(this.unifTime, newTime);
+    }
+  }
+
+  setBias(newBias: number){
+    this.use();
+    if (this.unifBias !== -1) {
+      gl.uniform1f(this.unifBias, newBias);
+    }
+  }
+
+  setGain(newGain: number){
+    this.use();
+    if (this.unifGain !== -1) {
+      gl.uniform1f(this.unifGain, newGain);
+    }
+  }
+
+  setFreq(newFreq: number){
+    this.use();
+    if (this.unifFrequency !== -1) {
+      gl.uniform1f(this.unifFrequency, newFreq);
+    }
+  }
+
+  setOctaves(newOctaves: number){
+    this.use();
+    if (this.unifOctaves !== -1) {
+      gl.uniform1f(this.unifOctaves, newOctaves);
     }
   }
 };

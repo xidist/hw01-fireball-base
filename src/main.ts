@@ -17,6 +17,11 @@ const controls = {
   red: 255,
   green: 0,
   blue: 0,
+  bias: 0.5,
+  gain: 0.5,
+  frequency: 5,
+  octaves: 8,
+  'Reset': reset,
 };
 
 let icosphere: Icosphere;
@@ -26,6 +31,12 @@ let prevTesselations: number = 5;
 let prevRed: number = 20;
 let prevGreen: number = 20;
 let prevBlue: number = 20;
+let prevBias: number = 0.5;
+let prevGain: number = 0.5;
+let prevFrequency: number = 5;
+let prevOctaves: number = 8;
+
+let check: number = 0;
 
 let time = 0;
 
@@ -36,6 +47,16 @@ function loadScene() {
   square.create();
   cube = new Cube(vec3.fromValues(0, 0, 0));
   cube.create();
+}
+
+function reset(){
+  check = 0;
+  controls.octaves = 8;
+  controls.bias = 0.5;
+  controls.gain = 0.5;
+  prevOctaves = 8;
+  prevBias = 0.5;
+  prevGain = 0.5;
 }
 
 function main() {
@@ -54,6 +75,12 @@ function main() {
   gui.add(controls, 'red', 0, 255).step(10);
   gui.add(controls, 'green', 0, 255).step(10);
   gui.add(controls, 'blue', 0, 255).step(10);
+  gui.add(controls, 'bias',0, 1);
+  gui.add(controls, 'gain',0, 1);
+  //gui.add(controls, 'frequency', 0, 1);
+  gui.add(controls, 'frequency', 1, 10).step(1);
+  gui.add(controls, 'octaves', 2, 10).step(1);
+  gui.add(controls, 'Reset');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -78,14 +105,23 @@ function main() {
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
-  //init time
-  lambert.setTime(time);
-  // This function will be called every frame
+  const fireball = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/fireball-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/fireball-frag.glsl')),
+  ]);
+  
   function tick() {
     camera.update();
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
+    //initialize octaves, bias and gain
+    if(check !=1){
+      fireball.setOctaves(8);
+      fireball.setBias(0.5);
+      fireball.setGain(0.5);
+      check = 1;
+    }
     if(controls.tesselations != prevTesselations)
     {
       prevTesselations = controls.tesselations;
@@ -95,23 +131,40 @@ function main() {
     if(controls.red != prevRed)
     {
       prevRed = controls.red;
-      lambert.setGeometryColor(vec4.fromValues(controls.red/255., controls.green/255., controls.blue/255., 1));
+      fireball.setGeometryColor(vec4.fromValues(controls.red/255., controls.green/255., controls.blue/255., 1));
     }
     if(controls.green != prevGreen)
     {
       prevGreen = controls.green;
-      lambert.setGeometryColor(vec4.fromValues(controls.red/255., controls.green/255., controls.blue/255., 1));
+      fireball.setGeometryColor(vec4.fromValues(controls.red/255., controls.green/255., controls.blue/255., 1));
     }
     if(controls.blue != prevBlue)
     {
       prevBlue = controls.blue;
-      lambert.setGeometryColor(vec4.fromValues(controls.red/255., controls.green/255., controls.blue/255., 1));
+      fireball.setGeometryColor(vec4.fromValues(controls.red/255., controls.green/255., controls.blue/255., 1));
     }
-    //increase time
-    //lambert.setTime(time);
-    //time++;
-    //lambert.setGeometryColor(vec4.fromValues(controls.red, controls.green, controls.blue, 1));
-    renderer.render(camera, lambert, [icosphere], time);
+    if(controls.bias != prevBias)
+    {
+      prevBias = controls.bias;
+      fireball.setBias(controls.bias);
+    }
+    if(controls.gain != prevGain)
+    {
+      prevGain = controls.gain;
+      fireball.setGain(controls.gain);
+    }
+    if(controls.frequency != prevFrequency)
+    {
+      prevFrequency = controls.frequency;
+      fireball.setFreq(controls.frequency);
+    }
+    if(controls.octaves != prevOctaves)
+    {
+      prevOctaves = controls.octaves;
+      fireball.setOctaves(controls.octaves);
+    }
+    
+    renderer.render(camera, fireball, [icosphere], time);
     time++;
     stats.end();
 
@@ -129,9 +182,6 @@ function main() {
   camera.setAspectRatio(window.innerWidth / window.innerHeight);
   camera.updateProjectionMatrix();
 
-  // Start the render loop
-  //init time
-  lambert.setTime(1);
   tick();
 }
 
