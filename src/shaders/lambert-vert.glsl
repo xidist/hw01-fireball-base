@@ -108,6 +108,64 @@ float fbm2 (vec2 _st) {
     return v;
 }
 
+//this is my attempt at understadning Ken Perlin's Hypertextures
+//this is the D(x), density mass function DMF
+// from origin to iR - inner Radius: fuzziness = 1.0
+// from iR to outer Radius: f = (|p|^2 - oR^2) / (iR^2 - oR^2)
+// from oR and outward: f = 0
+
+/*
+* params:
+* float           iR:     inner Radius of soft object
+* float           oR:     outer Radius of soft object
+* vec4            p :     the current position of the pixel? in gpu shader
+* vec4     sphereLoc:     the ceter of the sphere object (the Icospere's center)
+*                                                           (0, 0, 0, 0) in main.ts
+*
+*                                                      notes:
+*
+*                                                      - maybe make sphereLoc a slider in gui later
+*                                                      - look up cool DAT.GUI stuff
+*                                                      - oooh use color picker in 3 dimensional poslition (r,g,b) normalize
+*                                                      - normalize a normalized coord of the shperes positions
+*
+*/
+float fuzziness(float iR, float oR, vec4 p, vec4 sphereLoc){
+    float oR2 = oR * oR; //outer Radius squared
+    float iR2 = iR * iR; //inner Radius squared
+
+    // determine if the pt is in the sphere
+    // this becomes determine where it is in the sphere,
+    // apply the density function to the pt
+
+    vec4 sphere_to_p = p - sphereLoc;
+    // int *p_stp = &sphere_to_p; //int ptr named p_stp is set to the address of sphere_to_p
+    // int stp = *p_stp; //stp is set to the thing pointed to (vec4 sphere_to point) by p_stp
+    // float l2 = pow(stp.x, 2) + pow(stp.y,2) + pow(stp.z, 2); // length squared
+    float fuzziness;
+
+    // int *p_f = &fuzziness; // int ptr named p_f is set to the actual address of fuzziness
+    // int f = *p_f; // f is set to the thing pointed to (float fuzziness) by p_f
+    //great we just aliased a nickname! now we can use f to refer to fuzziness
+    // * ---> a pointer to the object, aka a pointer points to a mem address!
+    // & ---> ampersand is the address
+
+    // if (l2 <= iR2){
+    //     f = 1.0;
+    // }
+    // else if (l2 <= oR2){ 
+    //     f = (l2 - oR2) / (iR2 - oR2);
+    // }
+    // else {
+    //     f = 0.0;
+    // }
+    // just in case
+    // fuziness = f
+    return fuzziness;
+
+    // return f;
+}
+
 
 void main()
 {
