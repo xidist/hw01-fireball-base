@@ -53,6 +53,7 @@ vec3 beachball_shading(vec3 n){
     return ret;
 }
 
+//normal shading
 vec3 normal_shading(vec3 n){
     //color the negative coords in the back too!:
     vec3 _n = vec3(n);
@@ -85,6 +86,19 @@ vec3 normal_shading(vec3 n){
     return ret;
 }
 
+//checkerboard shading
+
+
+//cosine pallate
+// t: time [u_Time]
+// a: vertical shift
+// b: amplitude
+// c: period --- time to repeat
+// d: phase shift left
+vec3 palette(float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d )
+{
+    return a + b*cos( 6.28318*(c*(t+d)) );
+}
 
 
 void main()
@@ -158,19 +172,55 @@ void main()
         
 
 //uncomment for beachball
-        vec3 abc_1 = beachball_shading(vec3(fs_Nor));
+        // vec3 abc_1 = beachball_shading(vec3(fs_Nor));
+        //0.8, 0.5, 0.4		0.2, 0.4, 0.2	2.0, 1.0, 1.0	0.00, 0.25, 0.25
+        // vec3 a = vec3(0.8, 0.5, 0.4);
+        // vec3 b = vec3(0.2, 0.4, 0.2);
+        // vec3 c = vec3(2.0, 1.0, 1.0);
+        // vec3 d = vec3(0.00, 0.25, 0.25);
+        vec3 a = vec3(0.5, 0.5, 0.5	);
+        vec3 b = vec3(0.5, 0.5, 0.5	);
+        vec3 c = vec3(1.0, 1.0, 1.0);
+        vec3 d = vec3(0.00, 0.33, 0.67);
+        float sint = abs(sin(u_Time*0.01)); //[0,1]
+        vec3 cosine_pallate_color = palette(sint, a, b, c, d);
+        vec3 abc_1 = cosine_pallate_color;
         vec3 abc_2 = normal_shading(vec3(fs_Nor));
-        // bool flip = mod(int(u_Time),2);
+        //bool flip = mod(int(u_Time),2);
+        
         bool flip = true;
         vec3 abc = vec3(0.0);
-        if(flip){
+        if(sint < 0.0){  ///flip greater for beachball
             abc = abc_1;
         } else {
             abc = abc_2;
         }
+
+        bvec3 gt = greaterThan(abc_1, abc_2);
+        vec3 e0 = vec3(0.0);
+        vec3 e1 = vec3(1.0);
+        for(int i = 0; i < 3; i++){
+            if (gt[i]) { //if beachball > normal
+                e1[i] = abc_1[i];
+                e0[i] = abc_2[i];
+            } else {
+                e1[i] = abc_2[i];
+                e0[i] = abc_1[i];
+            }
+        }
+
+        vec3 diff = e1 - e0; //space to add to base e0 in each dir (x,y,z) for valid hermite interp
+        //we want to mix with time
+        vec3 _x = smoothstep(vec3(e0), vec3(e1), vec3(e0) + vec3(diff)*sint);
+
+        abc = mix(e0, e1, _x);
+
         diffuseColor[0] = abc[0];
         diffuseColor[1] = abc[1];
         diffuseColor[2] = abc[2];
+
+        
+        //diffuseColor = vec4(cosine_pallate_color, diffuseColor.w);
 
         
         diffuseTerm = clamp(diffuseTerm, 0., 1.);   //avoid negative lighting
