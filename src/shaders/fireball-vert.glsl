@@ -33,6 +33,7 @@ in vec4 vs_Col;             // The array of vertex colors passed to the shader.
 out vec4 fs_Nor;            // The array of normals that has been transformed by u_ModelInvTr. This is implicitly passed to the fragment shader.
 out vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.
+out vec4 fs_Pos; 
 
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
@@ -147,49 +148,22 @@ float _smoothstep(float edge0, float edge1, float x){
 
 void main()
 {
-    fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
+    //pass along the color and pos to the frag shader
+    //those don't change per frag
+    fs_Col = vs_Col;                       
+    fs_Pos = vs_Pos;
 
+    //copy over the inverse transpose of the model matrix
     mat3 invTranspose = mat3(u_ModelInvTr);
+
+    //
     fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);          // Pass the vertex normals to the fragment shader for interpolation.
                                                             // Transform the geometry's normals by the inverse transpose of the
                                                             // model matrix. This is necessary to ensure the normals remain
                                                             // perpendicular to the surface after the surface is transformed by
                                                             // the model matrix.
 
-
-    vec3 normal = vec3(vs_Nor);
-    // get a turbulent 3d noise using the normal, normal to high freq
-  float noise = 10.0 *  (0.0-0.10 )* turbulence( .5 * normal );
-  // get a 3d noise using the position, low frequency
-  float b = 5.0 * noised( 0.05 * vec3(vs_Pos)).x;
-  // compose both noises
-  float displacement = -0.10 * noise + (b* 0.6);
-
-  // move the position along the normal and transform it
-  vec3 newPosition = vec3(vs_Pos) + normal * displacement;
-  
-  newPosition *= fbm(newPosition*0.5);
-
-  float sinc = 0.5*((sin(u_Time * 0.5 * getGain(u_Time, u_Gain))) + 1.0);
-  float x1_min = min(sinc*newPosition[0], newPosition[0]);
-  float x1_max = max(sinc*newPosition[0], newPosition[0]);
-  float x2_min = min(sinc*newPosition[1], newPosition[1]);
-  float x2_max = max(sinc*newPosition[1], newPosition[1]);
-  float x3_min = min(sinc*newPosition[2], newPosition[2]);
-  float x3_max = max(sinc*newPosition[2], newPosition[2]);
-  vec3 min_pos = vec3(x1_min, x2_min, x3_min);
-  vec3 max_pos = vec3(x1_max, x2_max, x3_max);
-  float _time = u_Time*0.02;
-  float pposx = _smoothstep(x1_min, x1_max, (sin(_time)+1.0)*0.5);
-  float pposy = _smoothstep(x2_min, x2_max, (sin(_time)+1.0)*0.5);
-  float pposz = _smoothstep(x3_min, x3_max, (sin(_time)+1.0)*0.5);
-  vec3 ppos = 0.3*3.1415*vec3(pposx, pposy, pposz);
-    newPosition *= sin(_time)*fract(ppos);
-    vec4 modelposition = u_Model * vec4(newPosition, 1.0);
-    //vec4 modelposition = u_Model * vec4(ppos, 1.0);
-
-
-    //vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
+    vec4 modelposition = u_Model * fs_Pos;   // Temporarily store the transformed vertex positions for use below
 
     fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies
 
