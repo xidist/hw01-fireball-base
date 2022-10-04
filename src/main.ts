@@ -72,13 +72,8 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
-  gui.add(controls, 'red', 0, 255).step(10);
-  gui.add(controls, 'green', 0, 255).step(10);
-  gui.add(controls, 'blue', 0, 255).step(10);
   gui.add(controls, 'bias',0, 1);
   gui.add(controls, 'gain',0, 1);
-  //gui.add(controls, 'frequency', 0, 1);
-  gui.add(controls, 'frequency', 1, 10).step(1);
   gui.add(controls, 'octaves', 2, 10).step(1);
   gui.add(controls, 'Reset');
 
@@ -98,7 +93,7 @@ function main() {
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(0.2, 0.2, 0.2, 1);
+  renderer.setClearColor(Math.abs(Math.sin(time)), 0.0, 0.0, 1);
   gl.enable(gl.DEPTH_TEST);
 
   const lambert = new ShaderProgram([
@@ -110,7 +105,10 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/fireball-frag.glsl')),
   ]);
   
-  function tick() {
+  function tick() { 
+    let r: number = (Math.sin(time*6.28*0.02));
+    let g: number = (Math.cos(time*6.28*0.02));
+    renderer.setClearColor(0.0, 1.0, 0.0, 1);
     camera.update();
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);

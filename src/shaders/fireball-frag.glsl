@@ -100,6 +100,39 @@ vec3 palette(float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d )
     return a + b*cos( 6.28318*(c*(t+d)) );
 }
 
+//now attempting hypertexture
+
+float _mod(float x, float y) {
+    return x - y * float(floor(x/y));
+}
+
+//bias and gain functions lifted from http://demofox.org/biasgain.html
+float getBias()
+{
+    float bias = u_Bias;
+    float time = mod(u_Time, 20.f);
+    time = u_Time;
+  return (time / ((((1.0/bias) - 2.0)*(1.0 - time))+1.0));
+}
+
+float getBias(float time, float bias)
+{
+  return (time / ((((1.0/bias) - 2.0)*(1.0 - time))+1.0));
+}
+
+float getGain()
+{
+    float gain = u_Gain;
+    float time = mod(u_Time, 20.f);
+  if(time < 0.5)
+    return getBias(time * 2.0,gain)/2.0;
+  else
+    return getBias(time * 2.0 - 1.0,1.0 - gain)/2.0 + 0.5;
+}
+
+
+
+
 
 void main()
 {
@@ -111,73 +144,13 @@ void main()
         // Avoid negative lighting values
         diffuseTerm = clamp(diffuseTerm, 0.0, 1.0);
 
-        float ambientTerm = 0.2;
+        float ambientTerm = 0.6; //originally 0.2
 
         //lambert shading:s
         float lightIntensity = diffuseTerm + ambientTerm;   //Add a small float value to the color multiplier
                                                             //to simulate ambient lighting. This ensures that faces that are not
                                                             //lit by our point light are not completely black.
-        lightIntensity = 1.f; //flat shading
-        // Compute final shaded color
-       // out_Col = vec4(diffuseColor.rgb * lightIntensity, diffuseColor.a);
-
-
-//
-// comment below:
-//
-        // // // normals mapping
-        // vec3 norm = vec3(fs_Nor);
-        // float norm_length_reciprocal = (1.f/length(norm));
-        // norm = norm_length_reciprocal * norm;
-        // norm = clamp(norm, 0.f, 1.f);
-
-        // //diffuse color a
-        // //let a be the r and x component
-        // //normalized a: [0,1]
-        // int a = int(norm[0]*255.f);
-        // //let n_0 be the the scaled int from n_0: [0,255]
-        // float n_0 = norm[0];
-        // //make sure the color value max is 255
-        // if ( n_0 < 1.1  ){
-        //     //make sure the color value min is 0
-        //     if (n_0 > -0.1){
-        //         diffuseColor[0] = (norm[0]);
-        //     }
-        // } 
-        // //let n_1 be the the scaled int from n_1: [1,255]
-        // float n_1 = norm[1];
-        // //make sure the color value max is 255
-        // if ( n_1 < 1.1  ){
-        //     //make sure the color value min is 0
-        //     if (n_1 > -0.1){
-        //         diffuseColor[1] = (norm[1]);
-        //     }
-        // } 
-        // //let n_2 be the the scaled int from n_2: [2,255]
-        // int n_2 = int(norm[2]*255.f);
-        // //make sure the color value max is 255
-        // if ( n_2 < 256  ){
-        //     //make sure the color value min is 1
-        //     if (n_2 > -1){
-        //         //diffuseColor[2] = (norm[2]);
-        //         diffuseColor[2] = (norm[2]);
-        //     }
-        // } 
-
-        // int b = int(norm[2]);
-        // int c = int(norm[2]);
-        // vec3 abc = vec3(a, b, c);
-
-      
-        
-
-//uncomment for beachball
-        // vec3 abc_1 = beachball_shading(vec3(fs_Nor));
-        //0.8, 0.5, 0.4		0.2, 0.4, 0.2	2.0, 1.0, 1.0	0.00, 0.25, 0.25
-        // vec3 a = vec3(0.8, 0.5, 0.4);
-        // vec3 b = vec3(0.2, 0.4, 0.2);
-        // vec3 c = vec3(2.0, 1.0, 1.0);
-        // vec3 d = vec3(0.00, 0.25, 0.25);
+        //define a cosine pallate
         vec3 a = vec3(0.5, 0.5, 0.5	);
         vec3 b = vec3(0.5, 0.5, 0.5	);
         vec3 c = vec3(1.0, 1.0, 1.0);
@@ -186,44 +159,21 @@ void main()
         vec3 cosine_pallate_color = palette(sint, a, b, c, d);
         vec3 abc_1 = cosine_pallate_color;
         vec3 abc_2 = normal_shading(vec3(fs_Nor));
-        //bool flip = mod(int(u_Time),2);
         
-        bool flip = true;
-        vec3 abc = vec3(0.0);
-        if(sint < 0.0){  ///flip greater for beachball
-            abc = abc_1;
-        } else {
-            abc = abc_2;
-        }
-
-        bvec3 gt = greaterThan(abc_1, abc_2);
-        vec3 e0 = vec3(0.0);
-        vec3 e1 = vec3(1.0);
-        for(int i = 0; i < 3; i++){
-            if (gt[i]) { //if beachball > normal
-                e1[i] = abc_1[i];
-                e0[i] = abc_2[i];
-            } else {
-                e1[i] = abc_2[i];
-                e0[i] = abc_1[i];
-            }
-        }
-
+        vec3 e0 = min(abc_1, abc_2);
+        vec3 e1 = max(abc_1, abc_2);
         vec3 diff = e1 - e0; //space to add to base e0 in each dir (x,y,z) for valid hermite interp
         //we want to mix with time
-        vec3 _x = smoothstep(vec3(e0), vec3(e1), vec3(e0) + vec3(diff)*sint);
 
-        abc = mix(e0, e1, _x);
+        vec3 _x = smoothstep(vec3(e0), vec3(e1), vec3(e0) + vec3(diff)*getBias());
+        vec3 abc = mix(e0, e1, _x);
 
-        diffuseColor[0] = abc[0];
-        diffuseColor[1] = abc[1];
-        diffuseColor[2] = abc[2];
-
-        
-        //diffuseColor = vec4(cosine_pallate_color, diffuseColor.w);
-
+        diffuseColor.xyz = abc;
+        diffuseColor[1] *= 0.4;
+        diffuseColor[2] *= 0.2;
         
         diffuseTerm = clamp(diffuseTerm, 0., 1.);   //avoid negative lighting
+
         out_Col = vec4(diffuseColor.rgb*lightIntensity, 1.f);
         
 }

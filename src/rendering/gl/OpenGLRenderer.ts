@@ -4,6 +4,7 @@ import Camera from '../../Camera';
 import {gl} from '../../globals';
 import ShaderProgram from './ShaderProgram';
 
+
 // In this file, `gl` is accessible because it is imported above
 class OpenGLRenderer {
   flip = 0;
@@ -12,6 +13,7 @@ class OpenGLRenderer {
 
   setClearColor(r: number, g: number, b: number, a: number) {
     gl.clearColor(r, g, b, a);
+
   }
 
   setSize(width: number, height: number) {

@@ -33,7 +33,6 @@ in vec4 vs_Col;             // The array of vertex colors passed to the shader.
 out vec4 fs_Nor;            // The array of normals that has been transformed by u_ModelInvTr. This is implicitly passed to the fragment shader.
 out vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.
-out vec4 fs_Pos; 
 
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
@@ -139,6 +138,21 @@ float ease_in_out_quadratic(float t){
     }
 }
 
+float easeOutBounce(float x) {
+    float n1 = 7.5625;
+    float d1 = 2.75;
+
+    if (x < 1. / d1) {
+        return n1 * x * x;
+    } else if (x < 2. / d1) {
+        return n1 * (x -= 1.5 / d1) * x + 0.75;
+    } else if (x < 2.5 / d1) {
+        return n1 * (x -= 2.25 / d1) * x + 0.9375;
+    } else {
+        return n1 * (x -= 2.625 / d1) * x + 0.984375;
+    }
+}
+
 float _smoothstep(float edge0, float edge1, float x){
     //scale, bias and saturate x to 0..1 range
     x = clamp((x-edge0)/(edge1-edge0), 0.0, 1.0);
@@ -148,25 +162,45 @@ float _smoothstep(float edge0, float edge1, float x){
 
 void main()
 {
-    //pass along the color and pos to the frag shader
-    //those don't change per frag
-    fs_Col = vs_Col;                       
-    fs_Pos = vs_Pos;
+    fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
 
-    //copy over the inverse transpose of the model matrix
     mat3 invTranspose = mat3(u_ModelInvTr);
-
-    //
     fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);          // Pass the vertex normals to the fragment shader for interpolation.
                                                             // Transform the geometry's normals by the inverse transpose of the
                                                             // model matrix. This is necessary to ensure the normals remain
                                                             // perpendicular to the surface after the surface is transformed by
                                                             // the model matrix.
 
-    vec4 modelposition = u_Model * fs_Pos;   // Temporarily store the transformed vertex positions for use below
+    vec3 normal = vec3(vs_Nor);
+    // get a turbulent 3d noise using the normal, normal to high freq
+    float noise =  turbulence( .5 * normal );
+    // get a 3d noise using the position, low frequency
+    float b = 5.0 * noised( 0.05 * vec3(vs_Pos)).x;
+    // compose both noises
+    float displacement = 0.10 * noise + (b* 0.6);
 
+    // move the position along the normal and transform it
+    vec3 normDisp = normal * displacement;
+    float sinc = 0.5*((sin(u_Time * 0.5)) + 1.0);
+
+    //alter the icospher's position by a some normal displacement
+    vec3 newPosition = vec3(vs_Pos) + normDisp;
+    //generate another position based on fbm
+    vec3 fbmPos = newPosition * fbm(newPosition*1.9);
+    
+    //below we interpolate the two positions and animate
+    vec3 e0 = min(newPosition, fbmPos);
+    vec3 e1 = max(newPosition, fbmPos);
+    vec3 diff = e1 - e0; //space to add to base e0 in each dir (x,y,z) for valid hermite interp
+    //using sinusolal functions to alter pos with time
+    float sin_alt = abs(sin(u_Time * 0.07))* 1.1415;
+    float cos_alt = abs(cos(u_Time * 0.05))* 1.1415;
+    //interpolate between 
+    vec3 _x = smoothstep(vec3(e0), vec3(e1), vec3(e0) + vec3(diff)*sin_alt*cos_alt+noise);
+    vec3 abc = mix(e0, e1, _x);
+    
+    vec4 modelposition = u_Model * vec4(abc, 1.0);
     fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies
-
     gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is
                                              // used to render the final positions of the geometry's vertices
 }
