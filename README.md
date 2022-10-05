@@ -1,4 +1,6 @@
-[Here is a link to the live site]()
+[Here is a link to the live site](https://xidist.github.io/hw01-fireball-base/)
+^ Livesite deployment isn't working for some reason, but here is a video demo with the 3 gui params
+https://drive.google.com/file/d/1RemDQ96PxOg3BLeUCHifLVK8fxG8FbvC/view?usp=sharing
 
 First, I displaced the verticies along the normal with a noise function to make the icosohedron less shpere like. This resulted in the follwing shape.
 <p align="center">
