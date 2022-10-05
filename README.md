@@ -1,3 +1,27 @@
+[Here is a link to the live site]()
+
+First, I displaced the verticies along the normal with a noise function to make the icosohedron less shpere like. This resulted in the follwing shape.
+<p align="center">
+<img width="300"height="200" alt="image" src="https://user-images.githubusercontent.com/60904107/194121052-2c80bf0d-8e9e-4425-aba4-5800cbf8df9d.png">
+</p>
+Then, I used fbm to further distort the verticies and applied smoothstep to interpolate between the two to get sometghing more uneven and animated with respect to time.
+<p align="center">
+<img alt="a" src="https://user-images.githubusercontent.com/60904107/194120098-41e2accb-48a1-4253-b92b-845b15d57db9.gif">
+</p>
+<p align="center">fireball</p>
+
+The coloring is an interpolated mix of normal shading and a cosine pallete.
+
+The background is just a larger icosohedron surrounding the fireball.
+
+The four toolbox functions i used were
+- bias: in the fragment shader, I used this function to alter the transition between the normal shading and the cosine pallete
+- gain: in the vertex shader, I used this function to alter the transition between the dispalement along the normal with the fbm displacement
+- easeoutbounce: in the vertex shader, I used this function to alter a sin term that was used to interpolate between the positions for animaation
+- easinoutquadratic: in the fragment shader, I used this function to alter a sin term that was used to interpolate between the two shadings
+
+
+
 # [Project 1: Noise](https://github.com/CIS-566-Fall-2022/hw01-fireball-base)
 
 ## Objective
