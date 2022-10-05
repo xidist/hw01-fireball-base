@@ -162,8 +162,14 @@ float _smoothstep(float edge0, float edge1, float x){
 
 void main()
 {
-    fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
-
+    //fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
+    float alpha = 1.;
+        if (length(vs_Pos) < 5.){ //inner icosphere
+            alpha = 1.;
+        } else { //outer icosphere
+            fs_Col[3] = 0.5;
+        }
+    fs_Col = vs_Col;
     mat3 invTranspose = mat3(u_ModelInvTr);
     fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);          // Pass the vertex normals to the fragment shader for interpolation.
                                                             // Transform the geometry's normals by the inverse transpose of the
@@ -171,6 +177,10 @@ void main()
                                                             // perpendicular to the surface after the surface is transformed by
                                                             // the model matrix.
 
+    vec3 pos;
+
+    if (length(vs_Pos) < 5.){
+    
     vec3 normal = vec3(vs_Nor);
     // get a turbulent 3d noise using the normal, normal to high freq
     float noise =  turbulence( .5 * normal );
@@ -197,9 +207,12 @@ void main()
     float cos_alt = abs(cos(u_Time * 0.05))* 1.1415;
     //interpolate between 
     vec3 _x = smoothstep(vec3(e0), vec3(e1), vec3(e0) + vec3(diff)*sin_alt*cos_alt+noise);
-    vec3 abc = mix(e0, e1, _x);
+    pos = mix(e0, e1, _x);
+    } else {
+        pos = vec3(vs_Pos);
+    }
     
-    vec4 modelposition = u_Model * vec4(abc, 1.0);
+    vec4 modelposition = u_Model * vec4(pos, 1.0);
     fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies
     gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is
                                              // used to render the final positions of the geometry's vertices

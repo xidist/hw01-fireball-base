@@ -110,8 +110,7 @@ float _mod(float x, float y) {
 float getBias()
 {
     float bias = u_Bias;
-    float time = mod(u_Time, 20.f);
-    time = u_Time;
+    float time = u_Time;
   return (time / ((((1.0/bias) - 2.0)*(1.0 - time))+1.0));
 }
 
@@ -129,9 +128,6 @@ float getGain()
   else
     return getBias(time * 2.0 - 1.0,1.0 - gain)/2.0 + 0.5;
 }
-
-
-
 
 
 void main()
@@ -173,7 +169,13 @@ void main()
         diffuseColor[2] *= 0.2;
         
         diffuseTerm = clamp(diffuseTerm, 0., 1.);   //avoid negative lighting
+        
+        float alpha = 1.;
 
-        out_Col = vec4(diffuseColor.rgb*lightIntensity, 1.f);
+        if(fs_Col[3] == 0.5){
+            diffuseColor = vec4(0., 0., 1., 1.);
+        }
+
+        out_Col = vec4(diffuseColor.rgb*lightIntensity, fs_Col[3]);
         
 }

@@ -25,6 +25,7 @@ const controls = {
 };
 
 let icosphere: Icosphere;
+let icosphere2: Icosphere;
 let square: Square;
 let cube: Cube;
 let prevTesselations: number = 5;
@@ -43,7 +44,9 @@ let time = 0;
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
   icosphere.create();
-  square = new Square(vec3.fromValues(0, 0, 0));
+  icosphere2 = new Icosphere(vec3.fromValues(0, 0, 0), 7, controls.tesselations); //actively the background
+  icosphere2.create();
+  square = new Square(vec3.fromValues(0, 0, -2));
   square.create();
   cube = new Cube(vec3.fromValues(0, 0, 0));
   cube.create();
@@ -106,9 +109,11 @@ function main() {
   ]);
   
   function tick() { 
-    let r: number = (Math.sin(time*6.28*0.02));
-    let g: number = (Math.cos(time*6.28*0.02));
-    renderer.setClearColor(0.0, 1.0, 0.0, 1);
+    let r: number = (Math.sin(time*0.02));
+    let g: number = (Math.cos(time*0.02));
+    let b: number = (Math.cos(time*0.02));
+    // renderer.setClearColor(0.0, 1.0, 0.0, 1);
+    renderer.setClearColor(r, g, b, 1);
     camera.update();
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
@@ -125,21 +130,9 @@ function main() {
       prevTesselations = controls.tesselations;
       icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       icosphere.create();
-    }
-    if(controls.red != prevRed)
-    {
-      prevRed = controls.red;
-      fireball.setGeometryColor(vec4.fromValues(controls.red/255., controls.green/255., controls.blue/255., 1));
-    }
-    if(controls.green != prevGreen)
-    {
-      prevGreen = controls.green;
-      fireball.setGeometryColor(vec4.fromValues(controls.red/255., controls.green/255., controls.blue/255., 1));
-    }
-    if(controls.blue != prevBlue)
-    {
-      prevBlue = controls.blue;
-      fireball.setGeometryColor(vec4.fromValues(controls.red/255., controls.green/255., controls.blue/255., 1));
+
+      icosphere2 = new Icosphere(vec3.fromValues(0, 0, 0), 7, prevTesselations);
+      icosphere2.create();
     }
     if(controls.bias != prevBias)
     {
@@ -162,7 +155,9 @@ function main() {
       fireball.setOctaves(controls.octaves);
     }
     
-    renderer.render(camera, fireball, [icosphere], time);
+    renderer.render(camera, fireball, [icosphere, 
+      icosphere2
+    ], time);
     time++;
     stats.end();
 
