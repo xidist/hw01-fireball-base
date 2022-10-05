@@ -86,7 +86,19 @@ vec3 normal_shading(vec3 n){
     return ret;
 }
 
-//checkerboard shading
+float ease_in_quadratic(float t){
+    t = fract(t);
+    return t*t;
+}
+
+float ease_in_out_quadratic(float t){
+    t = fract(t);
+    if (t < 0.5) {
+        return ease_in_quadratic(t*2.0) / 2.0;
+    } else {
+        return 1.0 - (ease_in_quadratic( ((1.0 - t) * 2.0) / 2.0) );
+    }
+}
 
 
 //cosine pallate
@@ -161,7 +173,7 @@ void main()
         vec3 diff = e1 - e0; //space to add to base e0 in each dir (x,y,z) for valid hermite interp
         //we want to mix with time
 
-        vec3 _x = smoothstep(vec3(e0), vec3(e1), vec3(e0) + vec3(diff)*getBias());
+        vec3 _x = smoothstep(vec3(e0), vec3(e1), vec3(e0) + vec3(diff)*getBias()*ease_in_out_quadratic(sint));
         vec3 abc = mix(e0, e1, _x);
 
         diffuseColor.xyz = abc;
@@ -176,6 +188,7 @@ void main()
             diffuseColor = vec4(0., 0., 1., 1.);
         }
 
-        out_Col = vec4(diffuseColor.rgb*lightIntensity, fs_Col[3]);
+
+        out_Col = vec4(diffuseColor.rgb*lightIntensity, 0.7);
         
 }

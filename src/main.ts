@@ -18,7 +18,7 @@ const controls = {
   green: 0,
   blue: 0,
   bias: 0.5,
-  gain: 0.5,
+  gain: 0.79,
   frequency: 5,
   octaves: 8,
   'Reset': reset,
@@ -29,9 +29,6 @@ let icosphere2: Icosphere;
 let square: Square;
 let cube: Cube;
 let prevTesselations: number = 5;
-let prevRed: number = 20;
-let prevGreen: number = 20;
-let prevBlue: number = 20;
 let prevBias: number = 0.5;
 let prevGain: number = 0.5;
 let prevFrequency: number = 5;

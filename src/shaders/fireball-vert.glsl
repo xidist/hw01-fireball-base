@@ -124,19 +124,6 @@ float fbm (vec3 v) {
     return value;
 }
 
-float ease_in_quadratic(float t){
-    t = fract(t);
-    return t*t;
-}
-
-float ease_in_out_quadratic(float t){
-    t = fract(t);
-    if (t < 0.5) {
-        return ease_in_quadratic(t*2.0) / 2.0;
-    } else {
-        return 1.0 - (ease_in_quadratic( ((1.0 - t) * 2.0) / 2.0) );
-    }
-}
 
 float easeOutBounce(float x) {
     float n1 = 7.5625;
@@ -163,12 +150,6 @@ float _smoothstep(float edge0, float edge1, float x){
 void main()
 {
     //fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
-    float alpha = 1.;
-        if (length(vs_Pos) < 5.){ //inner icosphere
-            alpha = 1.;
-        } else { //outer icosphere
-            fs_Col[3] = 0.5;
-        }
     fs_Col = vs_Col;
     mat3 invTranspose = mat3(u_ModelInvTr);
     fs_Nor = vec4(invTranspose * vec3(vs_Nor), 0);          // Pass the vertex normals to the fragment shader for interpolation.
@@ -191,7 +172,8 @@ void main()
 
     // move the position along the normal and transform it
     vec3 normDisp = normal * displacement;
-    float sinc = 0.5*((sin(u_Time * 0.5)) + 1.0);
+    float sinc = 0.5*((sin(u_Time * 0.05)) + 1.0);
+    sinc = easeOutBounce(sinc);
 
     //alter the icospher's position by a some normal displacement
     vec3 newPosition = vec3(vs_Pos) + normDisp;
@@ -204,9 +186,9 @@ void main()
     vec3 diff = e1 - e0; //space to add to base e0 in each dir (x,y,z) for valid hermite interp
     //using sinusolal functions to alter pos with time
     float sin_alt = abs(sin(u_Time * 0.07))* 1.1415;
-    float cos_alt = abs(cos(u_Time * 0.05))* 1.1415;
-    //interpolate between 
-    vec3 _x = smoothstep(vec3(e0), vec3(e1), vec3(e0) + vec3(diff)*sin_alt*cos_alt+noise);
+    float cos_alt = abs(cos(u_Time * 0.05))* 1.1415; 
+    diff *= getGain(u_Time, u_Gain);
+    vec3 _x = smoothstep(vec3(e0), vec3(e1), vec3(e0) + vec3(diff)*sin_alt*cos_alt+noise*sinc);
     pos = mix(e0, e1, _x);
     } else {
         pos = vec3(vs_Pos);
