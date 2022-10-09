@@ -1,11 +1,28 @@
-[Here is a link to the live site](https://xidist.github.io/hw01-fireball-base/)
+- [Here is a link to the live site](https://xidist.github.io/hw01-fireball-base/)
 
-[in case live site doesn't work here's a vid demo of the three gui params](https://drive.google.com/file/d/1RemDQ96PxOg3BLeUCHifLVK8fxG8FbvC/view?usp=sharing)
+- [in case live site doesn't work here's a vid demo of the three gui params](https://drive.google.com/file/d/1RemDQ96PxOg3BLeUCHifLVK8fxG8FbvC/view?usp=sharing)
 
 First, I displaced the verticies along the normal with a noise function to make the icosohedron less shpere like. This resulted in the follwing shape.
 <p align="center">
-<img width="300"height="200" alt="image" src="https://user-images.githubusercontent.com/60904107/194121052-2c80bf0d-8e9e-4425-aba4-5800cbf8df9d.png">
+<img width="350"height="300" alt="image" src="https://user-images.githubusercontent.com/60904107/194121052-2c80bf0d-8e9e-4425-aba4-5800cbf8df9d.png">
 </p>
+
+For a while, I explored different shadings for the shader and settled on some sort of smoothstep between mapping the color to the calculated and normalized normal at each pixel with a cosine pallate.
+
+<p align="center">
+<img alt="smoothstep" src="https://user-images.githubusercontent.com/60904107/194732874-b8fdf347-e6a7-4ece-a57a-b5fc35cc2879.gif">
+</p>
+
+
+It took me a while to figure out what to do in the vertex shader to get a firey texture. I treied to replicate Ken Perlin's fire [hypertexture](https://dl.acm.org/doi/10.1145/74333.74359) and attempted to implement this with no success. I tried to offset the icosphere (sphere)'s positional coordinates in the vertex shader and add the turbulence as an offset to displace the verticies, as shown in the formula in the image below. I intended on using one of [iq's noise function](https://www.shadertoy.com/view/XsXfRH) and implementing turbulence as definded in Perlin's Hypertexture below, but I didn't get the results I was looking for.
+<p align="center">
+<img width="454" alt="image" src="https://user-images.githubusercontent.com/60904107/194732517-d4966273-1bf9-4af3-a633-12e861114d5c.png">
+
+<img width="497" alt="image" src="https://user-images.githubusercontent.com/60904107/194732467-3b7a15cb-7f83-4481-b0ae-47df6419f4a7.png">
+
+</p>
+
+
 Then, I used fbm to further distort the verticies and applied smoothstep to interpolate between the two to get sometghing more uneven and animated with respect to time.
 <p align="center">
 <img alt="a" src="https://user-images.githubusercontent.com/60904107/194120098-41e2accb-48a1-4253-b92b-845b15d57db9.gif">
